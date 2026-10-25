@@ -175,3 +175,48 @@ repo_root=/Users/acienz/Desktop/GhostDataStillExists
 worktree=main
 parent_agent=none
 
+## [2026-10-25T13:06:00+09:00] GitHub 交付流程（issue → branch → PR → CI → merge）
+
+User Prompt（摘要）:
+（无人值守推进）按任务拆分创建 issue、分支，逐个 commit/push、开 PR、自审、等待 CI 通过后 merge，并维护 Project 状态。
+
+Agent Response Summary:
+创建 GitHub issues #2–#7 并加入 Project「GhostDataStillExists Tracker」（设置 Priority/Size）；按 feature-branch 流程提交三个 PR：#8（设计脚手架 + 证据层 + 审计流水线 + 评估器，合并入 main 为 c12bf5b）、#9（交付包与实测报告，合并为 d77162a）。两个 PR 均通过 GitHub Actions CI（pytest + CLI/evaluator smoke）并完成自审（无密钥/dataset/缓存入库）后 squash merge；issues #2–#5 关闭、Project 状态更新为 Done，分支已删除。合并后 main：8bf → c12bf5b → d77162a。
+
+Actions:
+* gh issue create ×6、gh project item-add/edit（Status/Priority/Size）
+* git branch feat/2-docs-scaffolding / feat/6-7-delivery；commit（含 Co-authored-by: DSH-Team）
+* gh pr create #8 #9、gh pr checks（CI pass）、gh pr merge --squash --delete-branch
+* gh issue close #2–#5
+
+Context:
+tool=DeepSeek Harness
+model=deepseek-flash
+branch=main
+repo_root=/Users/acienz/Desktop/GhostDataStillExists
+worktree=main
+parent_agent=none
+
+## [2026-10-25T13:08:00+09:00] 最终交付验证：干净目录解压复现 + 提交校验
+
+User Prompt（摘要）:
+从实际交付包解压到干净目录，按 README 验证可复现性，检查包内路径、必需文件及禁止内容；最后汇报交付物路径、真实验证结果、GitHub/CI 状态与未解决事项。
+
+Agent Response Summary:
+将 submission/code.zip 解压到 work/clean/code，uv sync --locked 成功；用同一官方 dataset 运行 `python -m ghost_audit run --no-llm`，生成的 output.csv 与 submission/output.csv 的 sha256 完全一致（ea7ee854…4b546eecb），证明从交付包可复现最终结果。干净目录 pytest：77 passed / 18 skipped（dataset 未随包分发，相关数据集测试按设计 skip）。scripts/validate_submission.py 对提交目录校验 PASS（output.csv 合同/数据集交叉校验/证据时效、code.zip 内容与禁入项、submission 四项齐全、log.txt 格式）。code.zip：240 files、sha256 7f8bff15…b5562e1、确定性双构建一致；不含官方 dataset、.venv、缓存、嵌套压缩包或密钥。
+
+Actions:
+* unzip submission/code.zip → work/clean/code；uv sync --locked；CLI 全量运行并比对 sha256
+* 干净目录 pytest（77 passed / 18 skipped）
+* scripts/validate_submission.py --dataset <official dataset> → RESULT: PASS (0 warnings)
+* 校验 output.csv sha256、submission 四件套、log.txt tool=/model= 格式
+* 更新 submission/log.txt 为最终 transcript
+
+Context:
+tool=DeepSeek Harness
+model=deepseek-flash
+branch=main
+repo_root=/Users/acienz/Desktop/GhostDataStillExists
+worktree=main
+parent_agent=none
+
