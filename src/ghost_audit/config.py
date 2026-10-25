@@ -27,13 +27,15 @@ LOCAL_API_KEY_FILES = (
 
 #: DeepSeek chat-completions endpoint and supported model identifier.
 DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-flash")
 
-#: Model pricing (USD per 1M tokens) used by the usage report. These values are
-#: the DeepSeek public list prices recorded when the run was made; the report
-#: cites them explicitly as an assumption.
-PRICE_INPUT_USD_PER_MTOK = 0.28
-PRICE_OUTPUT_USD_PER_MTOK = 0.42
+#: Model pricing (USD per 1M tokens) used by the usage report. Source: DeepSeek
+#: public pricing page https://api-docs.deepseek.com/quick_start/pricing ,
+#: recorded on 2026-10-25 for model ``deepseek-flash``: off-peak input
+#: USD 0.15 / output USD 0.60 per 1M tokens (peak rates are double; the final
+#: run happened on a Sunday, i.e. off-peak). The usage report cites this source.
+PRICE_INPUT_USD_PER_MTOK = 0.15
+PRICE_OUTPUT_USD_PER_MTOK = 0.60
 
 
 def read_api_key() -> str | None:
