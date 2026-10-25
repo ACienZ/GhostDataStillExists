@@ -100,8 +100,17 @@ UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest -q tests/test_eval_*.py
   `reported_status`, ignoring historical email, dropping remediation and wrong
   step order.
 
-The end-to-end/transform tests currently **skip** when the pipeline CLI is not
-yet implemented; once the CLI exists run:
+The end-to-end/transform tests **skip** only when the pipeline CLI is absent.
+CI gating thresholds (also documented in `evaluation/evaluation_report.md`):
+
+| Run | Gate |
+| --- | --- |
+| official 32 samples (development regression set) | status accuracy == 1.0; step F1 >= 0.90; exact sequence accuracy >= 0.65; contract errors == 0 |
+| 13 hand-authored independent cases | status accuracy == 1.0; step F1 == 1.0; exact sequence accuracy == 1.0; contract errors == 0 |
+| transform checks (shuffle / `reported_status` / decoys) | per-case predictions identical to baseline |
+| mutation checks | 5/5 injected classic bugs reported as failures |
+
+Run commands:
 
 ```bash
 UV_CACHE_DIR="$PWD/.uv-cache" uv run pytest -q tests/test_eval_cases.py tests/test_eval_transforms.py

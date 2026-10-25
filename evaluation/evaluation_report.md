@@ -179,11 +179,10 @@ uv run python evaluation/evaluate.py validate \
   --dataset  docs/refs/hackerrank-orchestrate-october26-main/dataset
 ```
 
-Result on the 518-row output content written in this session: **0 errors, 0
-warnings** (validated on a naturally sorted copy). The `output.csv` at the
-repository root at report time was produced before the numeric-sort change and
-therefore reports the single `rows_lexicographic_order` warning — regenerate
-`output.csv` with the current pipeline to make the artifact fully clean.
+Result on the final 518-row `output.csv` written by the pipeline in this session
+(natural/numeric order): **0 errors, 0 warnings** — exact header, 518/518 rows,
+natural order, all step schemas/enums/ordering rules satisfied, and every cited
+evidence id real and captured at or before the case's `audit_at`.
 
 Harness test suite: `uv run pytest -q` -> **95 passed** (includes the Lead's
 `tests/test_intent.py`, `tests/test_policy_planner.py` and all

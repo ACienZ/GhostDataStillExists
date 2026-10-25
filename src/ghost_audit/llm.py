@@ -15,6 +15,7 @@ import json
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import (
@@ -107,5 +108,10 @@ class DeepSeekClient:
     @staticmethod
     def _append_usage(usage: dict) -> None:
         USAGE_LOG.parent.mkdir(parents=True, exist_ok=True)
+        record = {
+            "model": DEEPSEEK_MODEL,
+            "utc_time": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            **usage,
+        }
         with USAGE_LOG.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps({"model": DEEPSEEK_MODEL, **usage}) + "\n")
+            handle.write(json.dumps(record) + "\n")
