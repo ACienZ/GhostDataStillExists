@@ -184,9 +184,12 @@ Result on the final 518-row `output.csv` written by the pipeline in this session
 natural order, all step schemas/enums/ordering rules satisfied, and every cited
 evidence id real and captured at or before the case's `audit_at`.
 
-Harness test suite: `uv run pytest -q` -> **95 passed** (includes the Lead's
-`tests/test_intent.py`, `tests/test_policy_planner.py` and all
-`tests/test_eval_*.py`).
+Harness test suite: `uv run pytest -q` -> **100 passed** on the delivery tree
+(the 95 pipeline/evaluation tests measured for the final run plus 5
+`tests/test_transcript_builder.py` tests added for the delivery refresh; the
+5 new tests cover the transcript generator only and do not change any metric in
+this report). The 95-test suite includes the Lead's `tests/test_intent.py`,
+`tests/test_policy_planner.py` and all `tests/test_eval_*.py`.
 
 ## (g) Known limits / unverified items
 

@@ -9,8 +9,9 @@
 - 题目：https://www.hackerrank.com/contests/hackerrank-orchestrate-october26/challenges/ghost-data-still-exists
 - 只读参考仓库：`docs/refs/hackerrank-orchestrate-october26-main/`（**不要修改，不要提交**）。
   其中 `AGENTS.md`、`README.md`、`problem_statement.md`、`dataset/` 是题意与官方样例来源。
-- 交付物目录：`submission/`（output.csv、code.zip、log.txt、INTERVIEW_GUIDE.md）。
-- 工作日志：仓库根目录 `log.txt`，最终复制为 `submission/log.txt`。只追加、不重写；不记录任何密钥。
+- 交付物目录：`submission/`（output.csv、code.zip、log.txt、INTERVIEW_GUIDE.md、INTERVIEW_GUIDE_CN.md）。
+- 工作日志：仓库根目录 `log.txt` 为只追加、不重写的 agent 会话记录；`submission/log.txt` 由 `scripts/build_transcript.py` 生成为「根 log.txt（PART I，逐字节保留）+ 会话附录（PART II）」，上传 HackerRank 的是后者。
+- 会话原始导出：`.conversations/`（Codex + DeepSeek Harness 的会话导出，用户提供）。它是机器相关的输入，**gitignore、不进 code.zip**；只提交脱敏后的生成物 `submission/log.txt`。
 
 ## 1. 环境
 
@@ -53,5 +54,6 @@
 1. `uv run pytest` 全部通过（依赖 dataset 的用例在 dataset 缺失时 skip）。
 2. `output.csv` 通过契约校验与官方样例回归（样例集指标记录在 `evaluation/evaluation_report.md`）。
 3. `code.zip` 解压到干净目录后按 README 可复现。
-4. `log.txt` 符合参考仓库 `AGENTS.md` §5 的格式（`tool=`、`model=` 必填）。
-5. 所有未核实事项记录在 `docs/planning/` 中。
+4. 根 `log.txt` 符合参考仓库 `AGENTS.md` §5 的格式（`tool=`、`model=` 必填）；`submission/log.txt` 以根日志为逐字节前缀，并包含由 `.conversations/` 生成的 PART II 附录（`python3 scripts/build_transcript.py --check` 必须 PASS）。
+5. `submission/` 恰好包含五个交付物；两份面试指南（英文 + 中文）内容一致、无占位符。
+6. 所有未核实事项记录在 `docs/planning/` 中。

@@ -50,11 +50,14 @@ With ``--dataset DIR`` it additionally cross-checks:
     runnable package entry point (``src/ghost_audit/__main__.py``).
 
 ``submission/`` directory:
-  * contains exactly the four deliverables ``output.csv``, ``code.zip``,
-    ``log.txt`` (the chat transcript) and ``INTERVIEW_GUIDE.md``;
-  * ``log.txt`` is non-empty, does not leak secrets and looks like the
-    AGENTS.md session log (contains ``tool=`` and ``model=`` lines);
-  * ``INTERVIEW_GUIDE.md`` is non-empty and reports remaining TODO placeholders.
+  * contains exactly the five deliverables ``output.csv``, ``code.zip``,
+    ``log.txt`` (the chat transcript), ``INTERVIEW_GUIDE.md`` and
+    ``INTERVIEW_GUIDE_CN.md`` (its Chinese translation);
+  * ``log.txt`` is non-empty, does not leak secrets, looks like the AGENTS.md
+    session log (contains ``tool=`` and ``model=`` lines), keeps the root
+    ``log.txt`` as a verbatim prefix and contains the generated PART II
+    conversation appendices (``scripts/build_transcript.py``);
+  * both interview guides are non-empty and contain no TODO placeholders.
 
 Exit codes
 ==========
@@ -167,7 +170,16 @@ REMEDIATION_TO_VERIFICATION = {
 EVIDENCE_ID_RE = re.compile(r"^(?:evidence_\d+|activity_\d+|audit_\d+)$")
 CASE_ID_RE = re.compile(r"^case_\d+$")
 
-SUBMISSION_ITEMS = ("output.csv", "code.zip", "log.txt", "INTERVIEW_GUIDE.md")
+SUBMISSION_ITEMS = (
+    "output.csv",
+    "code.zip",
+    "log.txt",
+    "INTERVIEW_GUIDE.md",
+    "INTERVIEW_GUIDE_CN.md",
+)
+#: Marker written by scripts/build_transcript.py into submission/log.txt.
+TRANSCRIPT_APPENDIX_MARKER = "# PART II — FULL CONVERSATION TRANSCRIPTS"
+INTERVIEW_GUIDES = ("INTERVIEW_GUIDE.md", "INTERVIEW_GUIDE_CN.md")
 REQUIRED_ZIP_ENTRIES = (
     "README.md",
     "evaluation/evaluation_report.md",
@@ -1202,6 +1214,7 @@ def validate_code_zip(path: Path, report: Report) -> None:
         ("uv.lock", "uv.lock (reproducible dependency resolution)"),
         (".python-version", ".python-version (Python version pin)"),
         ("INTERVIEW_GUIDE.md", "INTERVIEW_GUIDE.md"),
+        ("INTERVIEW_GUIDE_CN.md", "INTERVIEW_GUIDE_CN.md (Chinese guide)"),
         ("src/ghost_audit/__main__.py", "src/ghost_audit/__main__.py"),
     ):
         if optional not in name_set:
@@ -1297,7 +1310,8 @@ def validate_submission_dir(
             f"{', '.join(SUBMISSION_ITEMS)}): " + ", ".join(extras)
         )
 
-    # chat transcript: root log.txt is copied by the Lead; here only sanity-check.
+    # chat transcript: the root log.txt is PART I; PART II holds the generated
+    # conversation appendices written by scripts/build_transcript.py.
     log_path = submission_dir / "log.txt"
     if log_path.is_file():
         try:
@@ -1324,27 +1338,48 @@ def validate_submission_dir(
                         f"{log_path}: no `## [timestamp]` section headings found; "
                         "does this look like the agent session transcript?"
                     )
+                root_log = submission_dir.parent / "log.txt"
+                if root_log.is_file():
+                    try:
+                        root_text = root_log.read_text(encoding="utf-8").rstrip("\n")
+                    except OSError as exc:
+                        report.error(f"cannot read {root_log}: {exc}")
+                    else:
+                        if root_text and not log_text.startswith(root_text):
+                            report.warn(
+                                f"{log_path}: does not start with the verbatim root "
+                                "log.txt; regenerate it with "
+                                "`python3 scripts/build_transcript.py`"
+                            )
+                if TRANSCRIPT_APPENDIX_MARKER not in log_text:
+                    report.warn(
+                        f"{log_path}: missing the generated PART II conversation "
+                        "appendices; run `python3 scripts/build_transcript.py`"
+                    )
                 report.info(f"chat transcript: {len(log_text.splitlines())} lines")
 
-    guide_path = submission_dir / "INTERVIEW_GUIDE.md"
-    if guide_path.is_file():
+    # both interview guides (English + Chinese) must be substantive and final.
+    for guide_name in INTERVIEW_GUIDES:
+        guide_path = submission_dir / guide_name
+        if not guide_path.is_file():
+            continue  # missing items are reported above
         try:
             guide_text = guide_path.read_text(encoding="utf-8")
         except OSError as exc:
             report.error(f"cannot read {guide_path}: {exc}")
-        else:
-            if len(guide_text.strip()) < 500:
-                report.warn(
-                    f"{guide_path}: only {len(guide_text)} characters; the AI "
-                    "interview guide should be substantive"
-                )
-            todo_count = guide_text.count("TODO")
-            if todo_count:
-                report.error(
-                    f"{guide_path}: still contains {todo_count} TODO placeholder(s); "
-                    "fill them from the final run before submitting"
-                )
-            report.info(f"interview guide: {len(guide_text.splitlines())} lines")
+            continue
+        if len(guide_text.strip()) < 500:
+            report.warn(
+                f"{guide_path}: only {len(guide_text)} characters; the AI "
+                "interview guide should be substantive"
+            )
+        todo_count = guide_text.count("TODO")
+        if todo_count:
+            report.error(
+                f"{guide_path}: still contains {todo_count} TODO placeholder(s); "
+                "fill them from the final run before submitting"
+            )
+        report.info(f"interview guide {guide_name}: {len(guide_text.splitlines())} lines")
 
     # submission/output.csv should be the same artifact as the root output.csv.
     submission_csv = submission_dir / "output.csv"
