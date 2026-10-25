@@ -118,3 +118,11 @@
   - 校验：`evaluation/evaluate.py validate` 0 errors/0 warnings；`scripts/validate_submission.py --dataset …` 对 output.csv/dataset 交叉校验/code.zip 全 PASS，仅 `submission/` 尚缺 output.csv、log.txt、INTERVIEW_GUIDE.md（Lead 负责复制）→ exit 2；`--skip-missing` PASS（3 warnings）；`uv run pytest -q` = 95 passed。
   - 说明：最终 output.csv 实际状态分布为 COMPLETE=152 / INCOMPLETE=356 / NOT_APPLICABLE=10（与 Lead 消息中的 153/355 不一致；文件 SHA 与 Lead 给出的一致，以文件为准并已在面试指南注明“computed from submitted file”）。等待 Lead 确认。
 - **Status**: docs-packaging 交付完成；剩余为 Lead 的 submission/ 复制与最终 gate。
+
+## 2026-10-25T13:08+09:00 — final delivery & clean-room verification (Lead)
+
+* PR #8 (scaffolding + evidence layer + pipeline + evaluation harness) merged to main as `c12bf5b`; PR #9 (reports + delivery package) merged as `d77162a`; CI green on both (pytest + CLI/evaluator smoke).
+* Final full run: 518 cases, 94 evidence files -> 2,922 observations; output.csv sha256 `ea7ee854…4b546eecb`; deterministic `--no-llm` rerun byte-identical.
+* Measured model usage: DeepSeek `deepseek-flash`, 10 calls, 1,493 input / 340 output tokens, USD 0.00042795 estimated (pricing source in `evaluation/usage_report.md`).
+* Clean-room: extracted `submission/code.zip` into a fresh directory, `uv sync --locked`, reran the pipeline against the official dataset -> identical `output.csv` sha256; clean-room `pytest` 77 passed / 18 skipped (dataset not shipped).
+* Submission gate `scripts/validate_submission.py --dataset …`: PASS (0 warnings). `submission/` contains output.csv, code.zip, log.txt, INTERVIEW_GUIDE.md.
