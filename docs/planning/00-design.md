@@ -127,7 +127,7 @@ evaluation/
   usage_report.md
 tests/                 # pytest：合同、身份、策略、转换、变异、样例回归
 scripts/               # build_code_zip.py / validate_submission.py / ocr_images.swift
-submission/            # output.csv / code.zip / log.txt / INTERVIEW_GUIDE.md
+submission/            # output.csv / code.zip / log.txt / INTERVIEW_GUIDE.md / INTERVIEW_GUIDE_CN.md
 ```
 
 设计原则：证据解析、身份解析、状态重建、策略应用全部确定性；模型只用于窄语义判断（意图复核、冲突解释），且必须可缓存、可复现、可计量。

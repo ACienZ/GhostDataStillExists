@@ -28,8 +28,9 @@ serialization are all rule-based. A model is used only as an optional, cached
 | --- | --- | --- |
 | Predictions | `output.csv` (repo root) | exactly 518 data rows, sorted by numeric `case_id` order |
 | Runnable snapshot | `submission/code.zip` | built by `scripts/build_code_zip.py`; **no dataset** |
-| Chat transcript | `submission/log.txt` | copy of the root `log.txt` session log |
+| Chat transcript | `submission/log.txt` | root `log.txt` (PART I) + generated conversation appendices (PART II) |
 | AI interview guide | `submission/INTERVIEW_GUIDE.md` | architecture, evaluation, Q&A (**English**) |
+| 中文面试指南 | `submission/INTERVIEW_GUIDE_CN.md` | Chinese translation of the same guide |
 
 The official dataset is **not** included in `code.zip` and is never
 redistributed by this repository; it is supplied separately by HackerRank.
@@ -307,10 +308,10 @@ Both files are required entries of `code.zip`.
 
 ## Packaging and submission checks
 
-Build the deterministic archive (excludes the dataset, `docs/`, `.venv`, caches,
-`evaluation/llm_usage.jsonl`, `evaluation/.tmp/`, credentials, `submission/`,
-`output.csv`, `log.txt` and nested archives; includes the README, evaluation
-reports and the intent cache):
+Build the deterministic archive (excludes the dataset, `docs/`, `.conversations/`,
+`.venv`, caches, `evaluation/llm_usage.jsonl`, `evaluation/.tmp/`, credentials,
+`submission/`, `output.csv`, `log.txt` and nested archives; includes the README,
+both interview guides, evaluation reports and the intent cache):
 
 ```bash
 uv run python scripts/build_code_zip.py            # writes submission/code.zip
@@ -319,7 +320,7 @@ uv run python scripts/build_code_zip.py --list     # print every archive entry
 ```
 
 Validate the whole submission (output contract, `code.zip` contents/secrets,
-`submission/` deliverable set):
+`submission/` deliverable set, transcript freshness/appendices, both guides):
 
 ```bash
 uv run python scripts/validate_submission.py --dataset "$DATASET_DIR"
@@ -334,9 +335,37 @@ failing). The final submitted `submission/` directory must contain exactly:
 submission/
 ├── output.csv             # 518 rows, sorted, contract-valid
 ├── code.zip               # built by scripts/build_code_zip.py
-├── log.txt                # chat transcript (copy of the root log.txt)
-└── INTERVIEW_GUIDE.md     # interview preparation guide
+├── log.txt                # chat transcript: PART I + generated PART II
+├── INTERVIEW_GUIDE.md     # interview preparation guide (English)
+└── INTERVIEW_GUIDE_CN.md  # Chinese translation of the interview guide
 ```
+
+### Chat transcript (`submission/log.txt`)
+
+The uploaded transcript has two parts:
+
+* **PART I** — the repository-root `log.txt` session log, preserved verbatim
+  (append-only, `tool=`/`model=` entries as required by the challenge contract);
+* **PART II** — full conversation appendices generated from the local
+  `.conversations/` harness exports: the earlier Codex planning session
+  (verbatim export), the DeepSeek Harness main session, and its three
+  sub-agent sessions (visible user turns, final assistant answers, and one-line
+  `> tool:` action summaries — internal reasoning and tool *outputs* are not
+  copied, and automatically injected `<system-reminder>` messages are skipped).
+
+Regenerate the transcript after new exports or new root-log entries:
+
+```bash
+python3 scripts/build_transcript.py          # writes submission/log.txt
+python3 scripts/build_transcript.py --check  # fails when the artifact is stale
+```
+
+The raw `.conversations/` folder is machine-specific, large and gitignored
+(like `dataset/`); it is never packaged. The generator is stdlib-only,
+deterministic for the same exports, keeps PART I byte-identical as a prefix and
+redacts API keys, credential assignments, bearer tokens and private-key blocks
+before writing. Because the exports are a point-in-time snapshot, PART II ends
+at the export's last event; later turns are covered by PART I entries.
 
 Clean-room reproduction of `code.zip`:
 
@@ -357,6 +386,7 @@ uv run python scripts/validate_submission.py --csv output.csv --skip-missing
 ```text
 README.md                     # this file
 INTERVIEW_GUIDE.md            # AI interview preparation guide (English)
+INTERVIEW_GUIDE_CN.md         # AI interview preparation guide (Chinese translation)
 pyproject.toml / uv.lock / .python-version
 src/ghost_audit/              # audit pipeline (see below)
 tests/                        # pytest: contract, identity, policy, mutation tests
@@ -367,9 +397,11 @@ evaluation/
   usage_report.md             # required: token/cost report of the final run
 scripts/
   build_code_zip.py           # deterministic submission archive builder
+  build_transcript.py         # root log + conversation appendices -> submission/log.txt
   validate_submission.py      # standalone submission validator (stdlib only)
   ocr_images.swift            # macOS Vision OCR helper for PNG evidence
-submission/                   # final 4 deliverables (not inside code.zip)
+.conversations/               # local raw harness exports (gitignored transcript input)
+submission/                   # final 5 deliverables (not inside code.zip)
 ```
 
 Pipeline modules (`src/ghost_audit/`): `dataset.py` (CSV loaders),

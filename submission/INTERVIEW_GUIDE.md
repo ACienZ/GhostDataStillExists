@@ -3,6 +3,8 @@
 > **Status: final — numbers match the submitted artifacts.**
 > This guide is written for the live interview: it explains what the system
 > does, how it decides, how it was evaluated, and what remains uncertain.
+> **Chinese translation:** [`INTERVIEW_GUIDE_CN.md`](INTERVIEW_GUIDE_CN.md) —
+> same content and measured numbers.
 > Every measured number below comes from the **final full-dataset run**
 > (2026-10-25T03:51Z, command
 > `uv run python -m ghost_audit run --dataset <DATASET_DIR> --output output.csv --llm-intent`)

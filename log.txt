@@ -242,3 +242,29 @@ repo_root=/Users/acienz/Desktop/GhostDataStillExists
 worktree=main
 parent_agent=none
 
+
+## [2026-10-25T14:27:14+0900] 交付刷新：中文面试指南 + 全量会话 transcript + submission 重建
+
+User Prompt (verbatim, secrets redacted):
+1. 将INTERVIEW_GUIDE.md翻译成中文并保存在INTERVIEW_GUIDE.md所在文件夹，命名为INTERVIEW_GUIDE_CN.md
+2. 我在根目录添加了.conversations文件夹，其中整理了dsh的AGENTS.md和本项目的全部会话；以及codex AGENTS.md及本项目的会话内容
+3. 整理及修改相关文档，（应该需要重新制作submission中的内容吧？），新建project issue及对应branch，完成本地及远端git内容，实现对本次修改的push pr 及 merge
+
+Agent Response Summary:
+按用户三项要求完成交付刷新：新增英文指南的完整中文翻译（根目录 + submission/ 各一份，逐字节一致）；把用户提供的 .conversations/ 原始会话导出视为机器相关输入（gitignore、不进 code.zip），新增 stdlib-only 的 scripts/build_transcript.py，将根 log.txt（PART I，逐字节保留）与脱敏后的会话附录（PART II：Codex 规划会话、DSH 主会话、3 个子 agent 会话）合成为上传用的 submission/log.txt；同步更新 README、项目 AGENTS.md、planning 文档、校验器与打包脚本，重建 submission/code.zip 并重做干净目录复现。审计流水线与 output.csv 未改动，sha256 保持 ea7ee854…b546eecb。
+
+Actions:
+* translation: submission/INTERVIEW_GUIDE_CN.md + 根 INTERVIEW_GUIDE_CN.md（439 行）；英文指南顶部加中文版互引；两份指南内容逐字节一致
+* transcript: scripts/build_transcript.py（确定性、PART I 前缀校验、来源 SHA-256/时间范围、密钥脱敏、省略 reasoning/tool 输出/system-reminder）+ tests/test_transcript_builder.py（5 用例）；submission/log.txt = 根日志 + PART II 附录
+* docs: .gitignore 增加 .conversations/；README（5 交付物、transcript 说明、目录结构）；AGENTS.md（交付物/验收标准）；docs/planning D23–D25、tasklog、checklist、design 布局；evaluation_report 测试数更新
+* tooling: scripts/validate_submission.py 校验 5 项交付物 + transcript PART I 前缀/PART II 标记 + 两份指南；scripts/build_code_zip.py 打包中文指南并排除 .conversations/
+* rebuild: submission/code.zip 确定性双构建；clean-room 解压 → uv sync --locked → pytest 82 passed/18 skipped → 全量 518 案例运行 → output.csv sha256 与提交件一致
+* GitHub: issue #13 + Project 条目 + 分支 docs/13-bilingual-guide-transcript
+
+Context:
+tool=DeepSeek Harness
+model=deepseek-flash
+branch=docs/13-bilingual-guide-transcript
+repo_root=/Users/acienz/Desktop/GhostDataStillExists
+worktree=main
+parent_agent=none

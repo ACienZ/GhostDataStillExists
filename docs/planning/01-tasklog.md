@@ -133,3 +133,22 @@
 * Rebuilt `submission/code.zip` from the merged main tree: 240 files, deterministic double-build, sha256 `489fd4510759411c706f5f8a56c528fafb261cb520aefb066a07ad10e4111287`.
 * Second clean-room verification with the rebuilt package: extracted into a fresh directory, `uv sync --locked`, ran the audit against the official dataset -> `output.csv` sha256 identical to `submission/output.csv` (`ea7ee8546a11981369bd606c72ec71f20331e2b8f9bacf017d8830d4b546eecb`); clean-room `pytest` 77 passed / 18 skipped (dataset not shipped by design).
 * `scripts/validate_submission.py --dataset …`: PASS (0 warnings); submission contains output.csv, code.zip, log.txt, INTERVIEW_GUIDE.md.
+
+## 2026-10-25T14:30+09:00 — follow-up delivery: bilingual interview guide + full conversation transcript (issue #13, branch docs/13-bilingual-guide-transcript)
+
+* **用户要求**：(1) 将 `INTERVIEW_GUIDE.md` 翻译为中文并保存为同目录 `INTERVIEW_GUIDE_CN.md`；(2) 根目录新增 `.conversations/`（DSH/Codex AGENTS.md + 本项目全部会话导出）；(3) 整理修改文档、重做 submission 内容，新建 issue/branch 并完成 push、PR、merge。
+* **决策**：D23（第 5 个交付物，根目录 + `submission/` 双份双语指南）、D24（`.conversations/` 原始导出 gitignore、不进包；`scripts/build_transcript.py` 生成 `submission/log.txt`）、D25（附录收录/省略/脱敏/确定性规则）。
+* **实现**：
+  - 中文指南 439 行，章节/表格/实测数字与英文指南一一对应；仓库根与 `submission/` 两份副本逐字节一致，英文指南顶部互引中文版。
+  - `scripts/build_transcript.py`（stdlib-only、确定性）：PART I = 根 `log.txt` 逐字节前缀；PART II = Codex 导出原文 + DSH 主会话 + 3 个子 agent 会话（可见消息/最终回复/一行 tool 摘要；省略内部 reasoning、工具输出正文、自动注入 `<system-reminder>`；密钥脱敏；标注来源 SHA-256 与 UTC 事件时间范围；`--check` 门禁）。
+  - `tests/test_transcript_builder.py`（5 用例：脱敏、组装、确定性、拒绝带附录的 base、缺失导出报错）；fake secret 用片段拼接，避免被 `validate_submission.py` 的密钥扫描误报（首次全量门禁曾报 7 个 false-positive，修复后 PASS）。
+  - 工具/文档：`validate_submission.py` 校验 5 项交付物 + PART I 前缀 + PART II 标记 + 双语指南；`build_code_zip.py` 打包中文指南并排除 `.conversations/`；README、项目 AGENTS.md、00-design、03-checklist、evaluation_report（测试数 95 → 100）同步更新。
+* **验证（实测）**：
+  - `uv run pytest -q` → **100 passed**。
+  - `evaluation/evaluate.py validate` → **0 errors / 0 warnings**。
+  - `python3 scripts/build_transcript.py --check` → PASS；`submission/log.txt` **2,997 行 / 323,476 bytes**（PART I 为 270 行根日志的逐字节前缀，附录含 685 条 tool 摘要）。
+  - `submission/code.zip` 确定性双构建一致：**243 entries / 280,180 bytes**，sha256 `ca74744e7a5e377629461c27eea90d981783d194039ec10c410668453b3da2c6`；包含两份指南与新脚本/测试，不含 dataset/.conversations/caches/密钥。
+  - `scripts/validate_submission.py --dataset …` → **PASS（0 warnings）**。
+  - 干净目录（从最终 `code.zip` 解压）：`uv sync --locked` → pytest **82 passed / 18 skipped** → 全量 518 案例运行 → `output.csv` sha256 `ea7ee854…b546eecb` 与提交件**逐字节一致**；clean-room validator PASS（2 warnings 为 `--skip-missing` 预期）。
+* **未改动**：审计流水线、`output.csv`、评估/用量报告指标。
+* **GitHub**：issue #13 + Project 条目（In progress → Done）、分支 `docs/13-bilingual-guide-transcript`、PR 合并后删除远端分支并关闭 issue。

@@ -20,7 +20,7 @@ uv run python scripts/validate_submission.py --dataset "$DATASET_DIR" --verbose
 ```
 
 - [ ] 退出码 `0`，输出 `RESULT: PASS`
-- [ ] `output.csv`、`submission/code.zip`、`submission/log.txt`、`submission/INTERVIEW_GUIDE.md` 全部存在
+- [ ] `output.csv`、`submission/code.zip`、`submission/log.txt`、`submission/INTERVIEW_GUIDE.md`、`submission/INTERVIEW_GUIDE_CN.md` 全部存在
 - [ ] `submission/` 中无多余文件（`.DS_Store` 等清理掉）
 - [ ] `scripts/validate_submission.py` 与 `evaluation/evaluate.py validate` 均无 ERROR
 
@@ -54,6 +54,7 @@ uv run python evaluation/evaluate.py validate \
 
 - [ ] 由 `uv run python scripts/build_code_zip.py` 生成（确定性、打印 SHA-256）
 - [ ] 包含 `README.md`（英文，含 setup/run 命令）
+- [ ] 包含 `INTERVIEW_GUIDE.md`（英文）与 `INTERVIEW_GUIDE_CN.md`（中文翻译）
 - [ ] 包含 `evaluation/evaluation_report.md`
 - [ ] 包含 `evaluation/usage_report.md`
 - [ ] 包含可运行入口 `src/ghost_audit/__main__.py`（`uv run python -m ghost_audit run ...`）
@@ -78,18 +79,22 @@ uv run python scripts/validate_submission.py --dataset "$DATASET_DIR"
 
 ## D. `log.txt` → chat_transcript（HackerRank 单独上传）
 
-- [ ] 仓库根 `log.txt` 是**追加式** agent 会话记录（Lead 维护，不重写历史）
-- [ ] 每个条目含 `tool=` 与 `model=` 行（参考 AGENTS.md §5 要求；最终多为 `tool=DeepSeek Harness`、`model=deepseek-flash`）
+- [ ] 仓库根 `log.txt`（PART I）是**追加式** agent 会话记录（不重写历史）
+- [ ] 每个条目含 `tool=` 与 `model=` 行（参考 AGENTS.md §5；多为 `tool=DeepSeek Harness`、`model=deepseek-flash`）
+- [ ] `submission/log.txt` 由 `python3 scripts/build_transcript.py` 生成：以根日志为**逐字节前缀**，后接 PART II 会话附录（Codex 规划会话原文 + DSH 主会话 + 3 个子 agent 会话）
+- [ ] `python3 scripts/build_transcript.py --check` PASS（产物未过期；若根日志或导出更新则重跑生成并提交）
+- [ ] 附录标注来源文件 SHA-256 前缀与事件时间范围；省略内部 reasoning、工具输出正文与自动注入 `<system-reminder>`；密钥/凭据/私钥已脱敏
 - [ ] 无 API key、token、cookie、私钥、真实个人数据
-- [ ] 已复制为 `submission/log.txt`
-- [ ] HackerRank 上该文件上传到 **chat_transcript** 槽位（不是 code.zip 内）
+- [ ] HackerRank 上把 `submission/log.txt` 上传到 **chat_transcript** 槽位（不是 code.zip 内）
 
 复核命令：
 
 ```bash
+python3 scripts/build_transcript.py --check
 grep -c 'tool=' log.txt && grep -c 'model=' log.txt
-grep -nE 'sk-[A-Za-z0-9]{16,}|-----BEGIN .*PRIVATE KEY-----|Bearer [A-Za-z0-9._-]{20,}' log.txt || echo "no secrets found"
-diff -q log.txt submission/log.txt && echo "log copies identical"
+grep -n 'PART II — FULL CONVERSATION TRANSCRIPTS' submission/log.txt
+grep -nE 'sk-[A-Za-z0-9_-]{16,}|-----BEGIN .*PRIVATE KEY-----|Bearer [A-Za-z0-9._-]{20,}' log.txt submission/log.txt || echo "no secrets found"
+head -c "$(wc -c < log.txt)" submission/log.txt | cmp - log.txt && echo "PART I is a verbatim prefix"
 ```
 
 ## E. 评估与用量报告（必须在 `code.zip` 内）
@@ -140,7 +145,8 @@ diff <(sort output.csv) <(sort /Users/acienz/Desktop/GhostDataStillExists/output
 
 ## G. AI interview 准备（INTERVIEW_GUIDE.md）
 
-- [ ] `submission/INTERVIEW_GUIDE.md` 已完成（无 `TODO` 占位）
+- [ ] `submission/INTERVIEW_GUIDE.md` 已完成（英文基准，无 `TODO` 占位）
+- [ ] `submission/INTERVIEW_GUIDE_CN.md` 已完成（同一内容的完整中文翻译，实测数字一致，无 `TODO` 占位）
 - [ ] 覆盖：问题理解、架构、证据处理/身份链接/时点重建、确定性 vs 模型分工、测试与评估、失败与改进、成本与已知限制
 - [ ] 含基于最终运行数据的 Q&A（数字与 `evaluation_report.md`/`usage_report.md` 一致）
 - [ ] 与本次提交的代码/输出一致（无未实现功能描述）
@@ -148,7 +154,8 @@ diff <(sort output.csv) <(sort /Users/acienz/Desktop/GhostDataStillExists/output
 复核命令：
 
 ```bash
-grep -c "TODO" submission/INTERVIEW_GUIDE.md || echo "no TODOs"
+grep -c "TODO" submission/INTERVIEW_GUIDE.md submission/INTERVIEW_GUIDE_CN.md || echo "no TODOs"
+grep -c '^## ' submission/INTERVIEW_GUIDE.md submission/INTERVIEW_GUIDE_CN.md  # 章节数应一致
 uv run python scripts/validate_submission.py --dataset "$DATASET_DIR"   # 含 TODO/密钥检查
 ```
 
@@ -158,8 +165,9 @@ uv run python scripts/validate_submission.py --dataset "$DATASET_DIR"   # 含 TO
 | --- | --- | --- |
 | `output.csv` | `submission/output.csv` | 518 行、排序、合同通过 |
 | `code.zip` | `submission/code.zip` | 含 README + evaluation 报告，无 dataset/密钥 |
-| `chat_transcript` | `submission/log.txt` | 根 `log.txt` 的副本 |
-| AI interview | `submission/INTERVIEW_GUIDE.md` | 现场讲解准备材料 |
+| `chat_transcript` | `submission/log.txt` | 根 `log.txt`（PART I）+ 生成的会话附录（PART II） |
+| AI interview | `submission/INTERVIEW_GUIDE.md` | 现场讲解准备材料（英文基准） |
+| AI interview（中文） | `submission/INTERVIEW_GUIDE_CN.md` | 中文翻译，无独立上传槽位 |
 
 - [ ] 提交前最后一刻再跑一次 A 节门禁命令并保存输出到 tasklog
 - [ ] 提交链接（如需）：<https://www.hackerrank.com/contests/hackerrank-orchestrate-october26/challenges/ghost-data-still-exists>

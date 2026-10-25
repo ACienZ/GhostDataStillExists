@@ -173,6 +173,27 @@
 - **Alternatives**: cache 与 telemetry 都不打包（`--llm-intent` 重跑需重新调用模型，不可离线复现）；全部打包（telemetry 与临时数据不属于交付内容）。
 - **Consequences**: `build_code_zip.py` 的排除清单新增 `llm_usage.jsonl`、`evaluation/.tmp/`；README 与提交清单同步说明。
 
+### D23 — 双语面试指南：新增第 5 个交付物 `INTERVIEW_GUIDE_CN.md`
+- **Status**: accepted（2026-10-25，用户要求）
+- **Decision**: `INTERVIEW_GUIDE.md` 保持英文基准；新增中文版 `INTERVIEW_GUIDE_CN.md`（章节、表格、实测数字、已知限制、Q&A 一一对应，两版顶部互相引用）。与英文指南一致，中文版同时放在**仓库根目录**（打包进 `code.zip` 的 `ROOT_FILES`）和 **`submission/`**（交付副本）；两处内容逐字节一致。`submission/` 仍不允许多余文件；校验器的 `SUBMISSION_ITEMS` 由 4 项更新为 5 项，并对两份指南都检查长度与 `TODO` 占位符。`build_code_zip.py` 的 `ROOT_FILES` 同时打包两份指南。
+- **Rationale**: 用户要求中文版便于中文面试/评审；英文版继续作为评委基准，避免两版口径漂移。
+- **Alternatives**: 只维护中文版（英文评委可能无法阅读）；只把翻译留在仓库根目录而不进 `submission/`（交付目录不完整）。
+- **Consequences**: 本决策把 D16 的「恰好四项」更新为「恰好五项」，"不允许多余文件"的原则不变；文档中所有"四项交付物"的表述需同步更新。
+
+### D24 — `.conversations/` 原始导出不提交，transcript 由脚本生成
+- **Status**: accepted（2026-10-25，用户提供导出后）
+- **Decision**: 用户提供的 `.conversations/`（Codex 会话导出 + DeepSeek Harness 主/子 agent `session.v4.jsonl` + media）视为机器相关输入：加入 `.gitignore`、`build_code_zip.py` 排除，不提交、不打包。新增 stdlib-only `scripts/build_transcript.py`，把根 `log.txt`（PART I，逐字节保留）与会话附录（PART II）合成为 `submission/log.txt`（上传 HackerRank 的 chat transcript）。生成物提交；原始导出留在本地，地位类似 `dataset/`。
+- **Rationale**: 原始导出约 20MB、含图片/`.DS_Store`/内部过程数据，不适合进仓库或交付包；同时上传的 transcript 必须覆盖全部会话（用户明确要求）。
+- **Alternatives**: 直接提交 `.conversations/`（体积/隐私/噪声，且 HackerRank 只收一个 transcript 文件）；只交根 `log.txt`（不含完整会话）。
+- **Consequences**: 生成器提供 `--check`（产物过期即 FAIL）作为门禁；`validate_submission.py` 校验 `submission/log.txt` 以根日志为逐字节前缀且含 PART II 标记；README/AGENTS/checklist 记录来源、生成命令与快照截止时间。
+
+### D25 — 会话附录的内容与脱敏规则
+- **Status**: accepted（2026-10-25）
+- **Decision**: PART II 附录收录：Codex 会话导出原文；DeepSeek Harness 会话的用户可见消息、模型最终可见回复、一行 `> tool: <name> — <summary>` 动作摘要。**不收录**：模型内部 reasoning、工具输出正文、harness 自动注入的 `<system-reminder>` 消息（并记录省略数量）。所有文本经密钥脱敏（`sk-` key、凭据赋值、Bearer token、私钥块）。来源文件标注 SHA-256 前缀与事件时间范围；时间戳取事件 epoch 转 UTC ISO，不使用构建时墙钟，保证同输入同输出。
+- **Rationale**: transcript 要「人可读、可审计、不泄密」，而不是原始 JSONL 转储；省略 reasoning/tool 输出既减少体积也避免暴露内部推理与冗余数据。
+- **Alternatives**: 全量原始事件（含 reasoning 与工具结果，体积数 MB）；只放对话文本（丢失动作轨迹）。
+- **Consequences**: 附录约 300KB、约 3 千行；导出快照之后的轮次由 PART I 覆盖；`tests/test_transcript_builder.py` 用合成数据固定脱敏/省略/组装/确定性行为。
+
 ---
 
 ## 待决定 / 待核实（非 blocked，记录在此防止遗忘）

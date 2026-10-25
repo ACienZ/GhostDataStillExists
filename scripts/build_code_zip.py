@@ -57,6 +57,7 @@ REPO_ROOT_DEFAULT = Path(__file__).resolve().parents[1]
 ROOT_FILES = (
     "README.md",
     "INTERVIEW_GUIDE.md",
+    "INTERVIEW_GUIDE_CN.md",
     "pyproject.toml",
     "uv.lock",
     ".python-version",
@@ -94,6 +95,7 @@ EXCLUDED_DIR_NAMES = {
     "work",
     "submission",
     "docs",
+    ".conversations",
     "dataset",
 }
 
