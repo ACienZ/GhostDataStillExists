@@ -19,3 +19,8 @@ build-backend = "uv_build"
 dev = [
     "pytest>=9.1.1",
 ]
+
+[tool.pytest.ini_options]
+# Keep pytest scoped to the project test suite: the local scratch directory
+# (work/) and packaged mirrors must never be collected accidentally.
+testpaths = ["tests"]
