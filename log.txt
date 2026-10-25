@@ -220,3 +220,25 @@ repo_root=/Users/acienz/Desktop/GhostDataStillExists
 worktree=main
 parent_agent=none
 
+## [2026-10-25T13:11:00+09:00] 交付包重建与二次干净目录复现
+
+User Prompt（摘要）:
+最终门禁发现本地 pytest 误收集 work/ 下的临时镜像后，修复并重建交付包，重新做干净目录可复现验证。
+
+Agent Response Summary:
+修复 pytest 作用域（pyproject testpaths，PR #11，ed36c28）后从合并后的 main 重建 submission/code.zip（240 files，确定性双构建，sha256 489fd451…11287）。二次干净目录验证：解压新包 → uv sync --locked → 对官方 dataset 运行 `python -m ghost_audit run --no-llm`，生成 output.csv 与提交件 sha256 完全一致（ea7ee854…eecb）；干净目录 pytest 77 passed / 18 skipped；validate_submission.py PASS（0 warnings）。重建原因与验证结果记录于 docs/planning/01-tasklog.md 与 PR #12。
+
+Actions:
+* pyproject: [tool.pytest.ini_options] testpaths = ["tests"]（PR #11）
+* scripts/build_code_zip.py 重建 code.zip；shasum 校验
+* work/clean2 解压、uv sync --locked、全量运行、pytest、validate_submission
+* PR #12：submission/code.zip + tasklog 更新
+
+Context:
+tool=DeepSeek Harness
+model=deepseek-flash
+branch=fix/12-rebuilt-code-zip
+repo_root=/Users/acienz/Desktop/GhostDataStillExists
+worktree=main
+parent_agent=none
+
