@@ -1,0 +1,25 @@
+name: Tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # 本机 HTTP 集成测试使用回环地址，不经过运行环境可能设置的代理。
+      NO_PROXY: 127.0.0.1,localhost,::1
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          # 与本机验收使用同一 uv 版本；Python 版本读取 .python-version。
+          version: "0.9.28"
+      - name: Install Python
+        run: uv python install
+      - name: Install locked dependencies
+        run: uv sync --locked
+      - name: Run all tests
+        # 测试自行创建临时配置和 SQLite；SMTP 使用替身，无需任何账户密钥。
+        run: uv run --locked pytest
