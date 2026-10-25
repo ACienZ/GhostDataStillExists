@@ -114,7 +114,7 @@
 - **Actions**:
   - 用 Lead 提供的最终运行事实（`--llm-intent`、output.csv SHA-256 `ea7ee854…`、12.5 s、94 evidence files→2,922 observations、samples/13 cases 指标、模型 deepseek-flash 10 calls/1,493 in/340 out/1,833 tokens/USD 0.00042795）回填 `INTERVIEW_GUIDE.md` 全部 `TODO(lead)`/`TBD`，并补充最终输出规模（518 行、3,242 steps、11 systems、15 operations、状态分布）；移除占位 banner，明确“模型仅 advisory、审计确定性、32 samples 为开发回归集”。
   - `README.md` 新增 “Final run at a glance” 表（命令/518 行/SHA/合同 0-0/复现性/samples 与 13 cases 指标/模型用量/耗时）；确认 numeric case_id 排序与两份报告引用。
-  - 最终构建 `submission/code.zip`：240 files、795.0 KiB uncompressed、257,844 bytes compressed、sha256 `7f8bff15e144d4f13934dbc490406e68d52692428c00081abd5ba9cb9b5562e1`，确定性双构建一致、写后重开验证 240 entries。
+  - 构建 `submission/code.zip`：240 files、257,8xx bytes compressed、确定性双构建一致、写后重开验证 240 entries。最终交付包在 `pyproject.toml` 增加 pytest `testpaths` 后重建：sha256 `489fd4510759411c706f5f8a56c528fafb261cb520aefb066a07ad10e4111287`。
   - 校验：`evaluation/evaluate.py validate` 0 errors/0 warnings；`scripts/validate_submission.py --dataset …` 对 output.csv/dataset 交叉校验/code.zip 全 PASS，仅 `submission/` 尚缺 output.csv、log.txt、INTERVIEW_GUIDE.md（Lead 负责复制）→ exit 2；`--skip-missing` PASS（3 warnings）；`uv run pytest -q` = 95 passed。
   - 说明：最终 output.csv 实际状态分布为 COMPLETE=152 / INCOMPLETE=356 / NOT_APPLICABLE=10（与 Lead 消息中的 153/355 不一致；文件 SHA 与 Lead 给出的一致，以文件为准并已在面试指南注明“computed from submitted file”）。等待 Lead 确认。
 - **Status**: docs-packaging 交付完成；剩余为 Lead 的 submission/ 复制与最终 gate。
@@ -126,3 +126,10 @@
 * Measured model usage: DeepSeek `deepseek-flash`, 10 calls, 1,493 input / 340 output tokens, USD 0.00042795 estimated (pricing source in `evaluation/usage_report.md`).
 * Clean-room: extracted `submission/code.zip` into a fresh directory, `uv sync --locked`, reran the pipeline against the official dataset -> identical `output.csv` sha256; clean-room `pytest` 77 passed / 18 skipped (dataset not shipped).
 * Submission gate `scripts/validate_submission.py --dataset …`: PASS (0 warnings). `submission/` contains output.csv, code.zip, log.txt, INTERVIEW_GUIDE.md.
+
+## 2026-10-25T13:10+09:00 — final package rebuild & second clean-room verification (Lead)
+
+* Final gate found local `pytest` collecting a scratch mirror (`work/clean/code/tests`) because pytest had no `testpaths`; fixed in PR #11 (`ed36c28`): `[tool.pytest.ini_options] testpaths = ["tests"]`; working-copy `pytest -q` -> 95 passed; CI green on main for every merged PR (#8, #9, #10, #11).
+* Rebuilt `submission/code.zip` from the merged main tree: 240 files, deterministic double-build, sha256 `489fd4510759411c706f5f8a56c528fafb261cb520aefb066a07ad10e4111287`.
+* Second clean-room verification with the rebuilt package: extracted into a fresh directory, `uv sync --locked`, ran the audit against the official dataset -> `output.csv` sha256 identical to `submission/output.csv` (`ea7ee8546a11981369bd606c72ec71f20331e2b8f9bacf017d8830d4b546eecb`); clean-room `pytest` 77 passed / 18 skipped (dataset not shipped by design).
+* `scripts/validate_submission.py --dataset …`: PASS (0 warnings); submission contains output.csv, code.zip, log.txt, INTERVIEW_GUIDE.md.
