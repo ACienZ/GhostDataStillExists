@@ -26,3 +26,7 @@ work/
 src/ghost_audit/config/
 src/templete_project/config/
 .env
+
+# generated evaluation scratch/telemetry (never shipped)
+evaluation/.tmp/
+evaluation/llm_usage.jsonl
