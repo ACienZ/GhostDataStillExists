@@ -18,6 +18,11 @@ wheels/
 # original challenge reference checkout (read-only input, not part of this repo)
 docs/refs/hackerrank-orchestrate-october26-main
 
+# raw AI harness conversation exports (machine-specific input for
+# scripts/build_transcript.py; the sanitized transcript is committed in
+# submission/log.txt instead)
+.conversations/
+
 # local scratch / analysis workspace
 work/
 .ocr-cache/
